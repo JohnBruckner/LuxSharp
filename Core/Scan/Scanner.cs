@@ -74,7 +74,7 @@ public class Scanner
         }
         else if (t.Type is not TokenType.WHITESPACE)
         {
-            AddToken(t.Type);
+            AddToken(t.Type, t.Literal);
         }
     }
 

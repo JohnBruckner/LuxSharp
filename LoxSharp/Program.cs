@@ -1,5 +1,7 @@
 ﻿using System.Text;
 using Core;
+using Core.Syntax;
+using Core.Tools;
 
 namespace LoxSharp;
 

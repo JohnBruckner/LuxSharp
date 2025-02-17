@@ -1,10 +1,16 @@
 ﻿using System.Text;
+using Core.Interpret;
+using Core.Parsing;
+using Core.Syntax;
 
 namespace Core;
 
 public class Runner
 {
-    private static bool hadError = false;
+    private static bool _hadError = false;
+    private static bool _hadRuntimeError = false;
+    private static Interpreter _interpreter = new Interpreter(RuntimeError);
+    
     
     public static void RunFile(string path)
     {
@@ -30,11 +36,16 @@ public class Runner
     {
         var scanner = new Scanner(source, Error);
         var tokens = scanner.ScanTokens();
+        var parser = new Parser(tokens, Error);
+        var expression = parser.Parse();
 
-        foreach (var token in tokens)
-        {
-            Console.WriteLine(token);
-        }
+        if (_hadError) Environment.Exit(64);
+        
+        _interpreter.Interpret(expression!);
+        
+        if (_hadRuntimeError) Environment.Exit(70);
+        
+        // Console.WriteLine(new AstPrinter().Print(expression!));
     }
 
     private static void Error(int line, string message)
@@ -45,6 +56,26 @@ public class Runner
     private static void Report(int line, string where, string message)
     {
         Console.Error.WriteLine($"[line {line}] Error {where}: {message}");
-        hadError = true;
+        _hadError = true;
+    }
+
+    private static void Error(Token token, string message)
+    {
+
+        switch (token.Type)
+        {   
+            case TokenType.EOF: Report(token.Line, " at end", message); 
+                break;
+
+            default:
+                Report(token.Line, $" at '{token.Lexeme}'", message);
+                break;
+        }
+    }
+
+    private static void RuntimeError(int line, string message)
+    {
+        Console.Error.WriteLine($"{message} \n[line {line}]");
+        _hadRuntimeError = true;
     }
 }
