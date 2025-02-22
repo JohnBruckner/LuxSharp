@@ -1,4 +1,5 @@
-﻿using Core.Syntax;
+﻿using Core.Exceptions;
+using Core.Syntax;
 
 namespace Core.Parse;
 
@@ -12,10 +13,38 @@ public class Parser(List<Token> tokens, Action<Token, string> errorHandler)
         var statements = new List<Stmt?>();
         while (!IsAtEnd())
         {
-            statements.Add(Statement());
+            statements.Add(Declaration());
         }
 
         return statements;
+    }
+
+    private Stmt? Declaration()
+    {
+        try
+        {
+            if (Match(TokenType.VAR))
+                return VarDeclaration();
+            return Statement();
+        }
+        catch (ParseError e)
+        {
+            Synchronize();
+            return null;
+        }
+    }
+
+    private Stmt? VarDeclaration()
+    {
+        Token name = Consume(TokenType.IDENTIFIER, "Expect variable name");
+        Expr initializer = null;
+        if (Match(TokenType.EQUAL))
+        {
+            initializer = ExpressionParser();
+        }
+
+        Consume(TokenType.SEMICOLON, "Expect ';' after variable declaration");
+        return new Var(name, initializer);
     }
 
     private Stmt Statement()
@@ -41,7 +70,27 @@ public class Parser(List<Token> tokens, Action<Token, string> errorHandler)
 
     private Expr ExpressionParser()
     {
-        return Equality();
+        return Assignment();
+    }
+
+    private Expr Assignment()
+    {
+        Expr expr = Equality();
+        if (Match(TokenType.EQUAL))
+        {
+            Token equals = Previous();
+            Expr value = Assignment();
+
+            if (expr is Variable)
+            {
+                Token name = ((Variable)expr).Name;
+                return new Assign(name, value);
+            }
+
+            Error(equals, "Invalid assignment target.");
+        }
+
+        return expr;
     }
 
     private Expr Equality()
@@ -132,6 +181,11 @@ public class Parser(List<Token> tokens, Action<Token, string> errorHandler)
         if (Match(TokenType.NUMBER, TokenType.STRING))
         {
             return new Literal(Previous().Literal);
+        }
+
+        if (Match(TokenType.IDENTIFIER))
+        {
+            return new Variable(Previous());
         }
 
         if (Match(TokenType.LEFT_PAREN))
@@ -235,6 +289,4 @@ public class Parser(List<Token> tokens, Action<Token, string> errorHandler)
         errorHandler(token, message);
         return new ParseError(message);
     }
-
-    private class ParseError(string message) : Exception(message);
 }

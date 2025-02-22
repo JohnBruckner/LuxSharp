@@ -25,4 +25,15 @@ public class Print(Expr expr) : Stmt
     }
 }
 
+public class Var(Token name, Expr initializer) : Stmt
+{
+    public readonly Token Name = name;
+    public readonly Expr? Initializer = initializer;
+
+    public override T Accept<T>(IStmtVisitor<T> stmtVisitor)
+    {
+        return stmtVisitor.VisitVarStmt(this);
+    }
+}
+
 

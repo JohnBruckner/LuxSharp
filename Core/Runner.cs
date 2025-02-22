@@ -78,4 +78,9 @@ public class Runner
         Console.Error.WriteLine($"{message} \n[line {line}]");
         _hadRuntimeError = true;
     }
+
+    private static void RunTimeError(Token name, string message)
+    {
+        Console.Error.WriteLine($"{name}: \n ${message}");
+    }
 }

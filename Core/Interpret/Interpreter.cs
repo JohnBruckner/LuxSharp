@@ -1,9 +1,12 @@
-﻿using Core.Syntax;
+﻿using Core.Env;
+using Core.Exceptions;
+using Core.Syntax;
 
 namespace Core.Interpret;
 
 public class Interpreter(Action<int, string> errorHandler) : IExprVisitor<object?>, IStmtVisitor<object?>
 {
+    private LoxEnvironment _environment = new LoxEnvironment();
     public void Interpret(List<Stmt> statements)
     {
         try
@@ -24,9 +27,11 @@ public class Interpreter(Action<int, string> errorHandler) : IExprVisitor<object
         statement.Accept(this);
     }
 
-    public object VisitAssignExpr(Assign expr)
+    public object? VisitAssignExpr(Assign expr)
     {
-        throw new NotImplementedException();
+        object? value = Evaluate(expr.Value);
+        _environment.Assign(expr.Name, value!);
+        return value;
     }
 
     public object? VisitBinaryExpr(Binary expr)
@@ -139,7 +144,7 @@ public class Interpreter(Action<int, string> errorHandler) : IExprVisitor<object
 
     public object? VisitVariableExpr(Variable expr)
     {
-        throw new NotImplementedException();
+        return _environment.Get(expr.Name);
     }
     
     public object? VisitExpressionStmt(Expression stmt)
@@ -152,6 +157,19 @@ public class Interpreter(Action<int, string> errorHandler) : IExprVisitor<object
     {
         var val = Evaluate(stmt.Expr);
         Console.WriteLine(val.Stringify());
+        return null;
+    }
+
+    public object? VisitVarStmt(Var stmt)
+    {
+        object? value = null;
+
+        if (stmt.Initializer != null)
+        {
+            value = Evaluate(stmt.Initializer);
+        }
+        
+        _environment.Define(stmt.Name.Lexeme, value);
         return null;
     }
 
@@ -190,10 +208,5 @@ public class Interpreter(Action<int, string> errorHandler) : IExprVisitor<object
     {
         if (left is double && right is double) return;
         throw new RuntimeError(op, "Operands must be numbers");
-    }
-
-    private class RuntimeError(Token token, string message) : Exception(message)
-    {
-        public Token Token { get; } = token;
     }
 }
