@@ -26,6 +26,7 @@ public class LoxEnvironment()
         if (_values.ContainsKey(name.Lexeme))
         {
             _values[name.Lexeme] = value;
+            return;
         }
 
         throw new RuntimeError(name, $"Undefined variable '{name.Lexeme}'.");
