@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using Core.Interpret;
-using Core.Parsing;
+using Core.Parse;
 using Core.Syntax;
 
 namespace Core;
@@ -37,11 +37,11 @@ public class Runner
         var scanner = new Scanner(source, Error);
         var tokens = scanner.ScanTokens();
         var parser = new Parser(tokens, Error);
-        var expression = parser.Parse();
+        var statements = parser.Parse();
 
-        if (_hadError) Environment.Exit(64);
+        if (_hadError) return;
         
-        _interpreter.Interpret(expression!);
+        _interpreter.Interpret(statements!);
         
         if (_hadRuntimeError) Environment.Exit(70);
         

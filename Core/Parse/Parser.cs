@@ -1,27 +1,45 @@
 ﻿using Core.Syntax;
 
-namespace Core.Parsing;
+namespace Core.Parse;
 
 public class Parser(List<Token> tokens, Action<Token, string> errorHandler)
 {
-    private readonly List<Token> _tokens = tokens;
-    private readonly Action<Token, string> _errorHandler = errorHandler;
     private int _current = 0;
 
 
-    public Expr? Parse()
+    public List<Stmt?> Parse()
     {
-        try
+        var statements = new List<Stmt?>();
+        while (!IsAtEnd())
         {
-            return Expression();
+            statements.Add(Statement());
         }
-        catch (ParseError e)
-        {
-            return null;
-        }
+
+        return statements;
     }
 
-    private Expr Expression()
+    private Stmt Statement()
+    {
+        if (Match(TokenType.PRINT))
+            return PrintStatement();
+        return ExpressionStatement();
+    }
+
+    private Stmt ExpressionStatement()
+    {
+        Expr expr = ExpressionParser();
+        Consume(TokenType.SEMICOLON, "Expect ';' after expression");
+        return new Expression(expr);
+    }
+
+    private Stmt PrintStatement()
+    {
+        Expr value = ExpressionParser();
+        Consume(TokenType.SEMICOLON, "Expect ';' after value");
+        return new Print(value);
+    }
+
+    private Expr ExpressionParser()
     {
         return Equality();
     }
@@ -118,7 +136,7 @@ public class Parser(List<Token> tokens, Action<Token, string> errorHandler)
 
         if (Match(TokenType.LEFT_PAREN))
         {
-            Expr expr = Expression();
+            Expr expr = ExpressionParser();
             Consume(TokenType.RIGHT_PAREN, "Expect ')' after expression");
             return new Grouping(expr);
         }
@@ -204,17 +222,17 @@ public class Parser(List<Token> tokens, Action<Token, string> errorHandler)
 
     private Token Peek()
     {
-        return _tokens[_current];
+        return tokens[_current];
     }
 
     private Token Previous()
     {
-        return _tokens[_current - 1];
+        return tokens[_current - 1];
     }
 
     private ParseError Error(Token token, string message)
     {
-        _errorHandler(token, message);
+        errorHandler(token, message);
         return new ParseError(message);
     }
 

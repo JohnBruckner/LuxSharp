@@ -2,21 +2,28 @@
 
 namespace Core.Interpret;
 
-public class Interpreter(Action<int, string> errorHandler) : IVisitor<object?>
+public class Interpreter(Action<int, string> errorHandler) : IExprVisitor<object?>, IStmtVisitor<object?>
 {
-
-    public void Interpret(Expr expression)
+    public void Interpret(List<Stmt> statements)
     {
         try
         {
-            object? value = Evaluate(expression);
-            Console.WriteLine(value.Stringify());
+            foreach (var statement in statements)
+            {
+                Execute(statement);
+            }
         }
         catch (RuntimeError e)
         {
             errorHandler(e.Token.Line, e.Message);
         }
     }
+
+    private void Execute(Stmt statement)
+    {
+        statement.Accept(this);
+    }
+
     public object VisitAssignExpr(Assign expr)
     {
         throw new NotImplementedException();
@@ -133,6 +140,19 @@ public class Interpreter(Action<int, string> errorHandler) : IVisitor<object?>
     public object? VisitVariableExpr(Variable expr)
     {
         throw new NotImplementedException();
+    }
+    
+    public object? VisitExpressionStmt(Expression stmt)
+    {
+        Evaluate(stmt.Expr);
+        return null;
+    }
+
+    public object? VisitPrintStmt(Print stmt)
+    {
+        var val = Evaluate(stmt.Expr);
+        Console.WriteLine(val.Stringify());
+        return null;
     }
 
     private object? Evaluate(Expr expr)

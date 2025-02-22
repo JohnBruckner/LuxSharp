@@ -20,6 +20,7 @@ binary → expression operator expression ;
 operator → "==" | "!=" | "<" | "<=" | ">" | ">="
             | "+" | "-" | "*" | "/" ;
 **/
+
 /**
  * Grammar V2
  * expression → equality ;
@@ -30,6 +31,15 @@ operator → "==" | "!=" | "<" | "<=" | ">" | ">="
  * unary → ( "!" | "-" ) unary | primary ;
  * primary → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
  */
+
+/**
+ * Grammar V4
+ * program → declaration* EOF ;
+ * declaration → varDecl | statement ;
+ * statement → exprStmt | printStmt ;
+ */
+
+
 public class Constants
 {
     public static IReadOnlyDictionary<string, TokenType> ReservedKeywords = new Dictionary<string, TokenType>

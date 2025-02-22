@@ -2,7 +2,7 @@
 
 namespace Core.Syntax
 {
-    public class AstPrinter : IVisitor<string>
+    public class AstPrinter : IExprVisitor<string>
     {
         public string VisitAssignExpr(Assign expr) => throw new NotImplementedException();
         public string VisitCallExpr(Call expr) => throw new NotImplementedException();

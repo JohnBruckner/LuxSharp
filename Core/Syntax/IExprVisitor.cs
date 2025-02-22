@@ -1,6 +1,6 @@
 ﻿namespace Core.Syntax;
 
-public interface IVisitor<T>
+public interface IExprVisitor<T>
 {
     T VisitAssignExpr(Assign expr);
     T VisitBinaryExpr(Binary expr);
